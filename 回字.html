@@ -1,0 +1,54 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+    <meta charset="UTF-8">
+    <title>动画帧</title>
+    <style>
+        .wrap{
+            width: 500px;
+            height: 500px;
+            border: #0C0C0C solid 7px;
+            position: relative;
+        }
+        @-webkit-keyframes move {
+            0%{
+                left: 0;
+            }
+            25%{
+                top: 0;
+                left: 400px;
+            }
+            50%{
+                top: 400px;
+                left: 400px;
+            }
+            74%{
+                top: 400px;
+                left: 0;
+            }
+            100%{
+                top: 0;
+                left: 0;
+            }
+        }
+        .box {
+            width: 100px;
+            height: 100px;
+            background: rebeccapurple;
+            position: absolute;
+            top: 0;
+            left: 0;
+            -webkit-animation: 5s move ease-in infinite alternate;
+        }
+        .wrap:hover .box{
+            -webkit-animation-play-state: paused;
+        }
+    </style>
+</head>
+<body>
+<div class = "wrap">
+    <div class = "box">
+    </div>
+</div>
+</body>
+</html>
