@@ -1,0 +1,137 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+    <meta charset="UTF-8">
+    <title>3D图片轮换</title>
+    <style>
+        #wrap{
+            width: 570px;
+            height: 300px;
+            position: relative;
+            margin: 100px auto;
+            -webkit-perspective: 800px;
+            -webkit-transform-style: preserve-3d;
+        }
+        img{
+            width: 570px;
+            height: 300px;
+            position: absolute;
+            left: 0;
+            top: 0;
+            -webkit-transform-origin:bottom;
+            -webkit-transform:rotateX(-180deg);
+/*
+            -webkit-animation-fill-mode:forwards; 停留在最后一帧
+*/
+            opacity:0;
+        }
+        @-webkit-keyframes show {
+            0%{
+                -webkit-transform:rotateX(180deg);
+                opacity:0;
+            }
+            50%{
+                -webkit-transform:rotateX(-30deg);
+                opacity:0.5;
+            }
+            60%{
+                -webkit-transform:rotateX(-20deg);
+                opacity:0.6;
+            }
+            70%{
+                -webkit-transform:rotateX(-15deg);
+                opacity:0.7;
+            }
+            80%{
+                -webkit-transform:rotateX(8deg);
+                opacity:0.8;
+            }
+            90%{
+                -webkit-transform:rotateX(-6deg);
+                opacity:0.9 ;
+            }
+            100%{
+                -webkit-transform:rotateX(0deg);
+                opacity:1;
+            }
+        }
+        @-webkit-keyframes hide {
+            0%{
+                -webkit-transform:rotateX(0deg);
+                opacity:1;
+            }
+            100%{
+                -webkit-transform:rotateX(-180deg);
+                opacity:0;
+            }
+        }
+        .show{
+            -webkit-transform:rotateX(0deg);
+            opacity:1;
+            -webkit-animation: 1s show;
+        }
+        .hide{
+            -webkit-transform:rotateX(-180deg);
+            opacity:0;
+            -webkit-animation:1s hide;
+        }
+        #wrap input {
+            width: 50px;
+            height: 50px;
+            margin: 0;
+            padding: 0;
+            background: plum;
+            position: absolute;
+            top: 130px;
+            border-radius: 50%;
+            color:red;
+            outline: none;
+            font: 15px/20px Arial;
+        }
+        #wrap input:nth-of-type(1){
+            left: -50px;
+        }
+        #wrap input:nth-of-type(2){
+            right: -50px;
+        }
+    </style>
+</head>
+<body>
+<div id = "wrap">
+    <input type="button" value="上一张" />
+    <img src="img/view6.jpg" alt="图片" class="show"/>
+    <img src="img/view7.jpg" alt="图片" />
+    <img src="img/view8.jpg" alt="图片" />
+    <img src="img/view9.jpg" alt="图片" />
+    <img src="img/view10.jpg" alt="图片" />
+    <img src="img/view11.jpg" alt="图片" />
+    <img src="img/view12.jpg" alt="图片" />
+    <img src="img/view13.jpg" alt="图片" />
+    <input type="button" value="下一张" />
+</div>
+<script>
+    window.onload = function(){
+        var oWrap = document.getElementById('wrap');
+        var oBtn = oWrap.getElementsByTagName('input');
+        var oImg = oWrap.getElementsByTagName('img');
+        var iNow = 0;
+        oBtn[0].onclick = function(){
+            oImg[iNow].className = 'hide';
+            iNow--;
+            if(iNow < 0){
+                iNow = oImg.length-1;
+            }
+            oImg[iNow].className = 'show';
+        };
+        oBtn[1].onclick = function(){
+            oImg[iNow].className = 'hide';
+            iNow++;
+            if(iNow >= oImg.length){
+                iNow = 0;
+            }
+            oImg[iNow].className = 'show';
+        }
+    }
+</script>
+</body>
+</html>

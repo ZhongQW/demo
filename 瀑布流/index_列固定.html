@@ -1,0 +1,206 @@
+<!DOCTYPE HTML>
+<html>
+<head>
+    <meta http-equiv="Content-Type" content="text/html; charset=utf-8">
+    <title>瀑布流</title>
+    <style>
+        * {
+            margin: 0;
+            padding: 0;
+        }
+        #container {
+            border: 1px solid red;
+            position: relative;
+            margin: 50px auto 0;
+        }
+        #container img {
+            position: absolute;
+        }
+        #loader {
+            width: 100%;
+            height: 60px;
+            background: url('./img/loader.gif') no-repeat center #FFF;
+            position: fixed;
+            bottom: 0;
+            left: 0;
+            display: none;
+        }
+    </style>
+    <script src="jquery-1.9.1.min.js"></script>
+    <script>
+        window.onload = function() {
+            var oContainer = document.getElementById("container");
+            var oLoader = document.getElementById("loader");
+            var iWidth = 200; //每一列宽
+            var iSpace = 10; //空隙宽
+            var iOuterWidth = iWidth + iSpace; //列实际宽
+            var iCell = 0; //列数
+            var iPage = 0;
+            var arrL = []; //存放每一个图片的left值
+            var arrT = []; //存放每一个图片的top值
+            var iBtn = true;
+            var sUrl = 'http://www.wookmark.com/api/json/popular?callback=?';
+
+            function setCell() {
+                iCell = Math.floor(document.documentElement.clientWidth / iOuterWidth);
+
+                oContainer.style.width = (iOuterWidth * iCell - iSpace) + "px";
+            }
+            setCell();
+
+            //初始化arrT和arrL数组
+            for (var i = 0; i < iCell; i++) {
+                arrT.push(0);
+                arrL.push(i * iOuterWidth);
+            }
+
+            getImg();
+
+            function getImg() {
+                if (iBtn) {
+                    iBtn = false;
+                    oLoader.style.display = "block";
+                    $.getJSON(sUrl, 'page = ' + iPage, function (data) {
+                        $.each(data, function (index, obj) {
+                            var oImg = document.createElement('img');
+                            oImg.src = obj.preview;
+
+                            //设置图片的大小，由于宽一定所以，高度就等比缩小
+                            var iHeight = iWidth / obj.width * obj.height;
+                            oImg.width = iWidth;
+                            oImg.height = iHeight;
+
+                            //设置top值
+                            var iMinIndex = getMin(); //iMinIndex就是最小高度的列
+                            oImg.style.top = arrT[iMinIndex] + "px";
+                            oImg.style.left = arrL[iMinIndex] + "px";
+
+                            arrT[iMinIndex] += iHeight + 10; //修改当前列的高度
+
+                            oContainer.appendChild(oImg);
+                        });
+                        oLoader.style.display = "none";
+                        iBtn = true;
+                    });
+                }
+            }
+
+            //获取到哪一列的高度最小，然后将列的索引return
+            function getMin() {
+                var iv = arrT[0];
+                var _index = 0;
+                for (var i = 1; i < arrT.length; i++) {
+                    if (arrT[i] < iv) {
+                        iv = arrT[i];
+                        _index = i;
+                    }
+                }
+                return _index;
+            }
+
+
+            $(window).on("scroll", function () { // 鼠标滚动事件，重新加载数据
+                var iH = $(window).scrollTop() + $(window).innerHeight(); //当最短的一列进来
+                var iMinIndex = getMin();
+
+                if (arrT[iMinIndex] + oContainer.offsetHeight < iH) {
+                    iPage++;
+                    getImg();
+                }
+            });
+            $(window).on("resize", function () { // 当页面窗口变化时，图片跟着变化
+                var oldCell = iCell;
+                setCell();//重新计算列数和container的windth
+
+                //当可视区足够小，但是有一列的图片又过长的话，就重新渲染。
+                var iH = $(window).scrollTop() + $(window).innerHeight(); //当最短的一列进来
+                var iMinIndex = getMin();
+
+                if (arrT[iMinIndex] + oContainer.offsetHeight < iH) {
+                    iPage++;
+                    getImg();
+                }
+
+                if(oldCell !== iCell) {
+                    arrT.length = 0;
+                    arrL.length = 0;
+                    for (var i = 0; i < iCell; i++) {
+                        arrT.push(0);
+                        arrL.push(i * iOuterWidth);
+                    }
+
+                    var imgs = oContainer.querySelectorAll("img");
+                    for (var i = 0; i < imgs.length; i++) {
+
+                        var iMinIndex = getMin(); //iMinIndex就是最小高度的列
+
+                        animate(imgs[i], {top: arrT[iMinIndex], left: arrL[iMinIndex]}, 10, 0.05, function () {
+                        });
+
+                        /*                    imgs[i].style.top = arrT[iMinIndex] + "px";
+                    imgs[i].style.left = arrL[iMinIndex] + "px";*/
+
+                        arrT[iMinIndex] += imgs[i].height + 10; //修改当前列的高度
+
+                    }
+                }
+            });
+            //原生js写的animate，实现运动效果
+            function animate(obj, json, interval, sp, fn) {
+                clearInterval(obj.timer);
+                //var k = 0;
+                //var j = 0;
+                function getStyle(obj, arr) {
+                    if(obj.currentStyle){
+                        return obj.currentStyle[arr];  //针对ie
+                    } else {
+                        return document.defaultView.getComputedStyle(obj, null)[arr];
+                    }
+                }
+                obj.timer = setInterval(function(){
+                    //j ++;
+                    var flag = true;
+                    for(var arr in json) {
+                        var icur = 0;
+                        //k++;
+                        if(arr == "opacity") {
+                            icur = Math.round(parseFloat(getStyle(obj, arr))*100);
+                        } else {
+                            icur = parseInt(getStyle(obj, arr));
+                        }
+                        var speed = (json[arr] - icur) * sp;
+                        speed = speed > 0 ? Math.ceil(speed): Math.floor(speed);
+                        if(icur != json[arr]){
+                            flag = false;
+                        }
+                        if(arr == "opacity"){
+                            obj.style.filter = "alpha(opacity : '+(icur + speed)+' )";
+                            obj.style.opacity = (icur + speed)/100;
+                        }else {
+                            obj.style[arr] = icur + speed + "px";
+                        }
+                        //console.log(j + "," + arr +":"+ flag);
+                    }
+
+                    if(flag){
+                        clearInterval(obj.timer);
+                        //console.log(j + ":" + flag);
+                        //console.log("k = " + k);
+                        //console.log("j = " + j);
+                        //console.log("DONE");
+                        if(fn){
+                            fn();
+                        }
+                    }
+                },interval);
+            }
+        }
+
+    </script>
+</head>
+
+<body>
+<div id="container"></div>
+<div id="loader"></div>
+</body>
+</html>
