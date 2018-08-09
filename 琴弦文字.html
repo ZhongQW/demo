@@ -1,0 +1,180 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+    <meta charset="UTF-8">
+    <title>琴弦文字</title>
+    <style>
+        #list{
+            width: 580px;
+            margin: 50px auto;
+            padding: 0;
+            list-style: none;
+        }
+        #list li{
+            height: 40px;
+            font: 12px/40px "宋体";
+            border: 1px solid #000;
+            position: relative;
+            text-indent: 12px;
+        }
+        #list li span{
+            width: 12px;
+            height: 12px;
+            line-height: 15px;
+        }
+    </style>
+</head>
+<body>
+    <ul id="list">
+        <li>蝴蝶效应（The Butterfly Effect）是指在一个动力系统中</li>
+        <li>初始条件下微小的变化能带动整个系统的长期的巨大的连锁反应</li>
+        <li>这是一种混沌现象</li>
+        <li>任何事物发展均存在定数与变数</li>
+        <li>事物在发展过程中其发展轨迹有规律可循，同时也存在不可测的“变数”</li>
+        <li>往往还会适得其反，一个微小的变化能影响事物的发展，说明事物的发展具有复杂性</li>
+    </ul>
+<script>
+    window.onload = function()
+    {
+        var oList = document.getElementById('list');
+        var oLis = oList.getElementsByTagName('li');
+        var aLiHeight = oLis[0].offsetHeight;
+        for(var i=0;i<oLis.length;i++)
+        {
+            var sHtml = oLis[i].innerHTML;
+            oLis[i].innerHTML = "";
+            for(var j=0;j<sHtml.length;j++)
+            {
+                //将每一个文字都变为<span>文字</span>
+                oLis[i].innerHTML += "<span>"+sHtml[j]+"</span>"
+            }
+            var aSpan = oLis[i].childNodes;
+            for(var j=0;j<aSpan.length;j++)
+            {
+                aSpan[j].style.left = aSpan[j].offsetLeft+"px";
+                aSpan[j].style.top = aSpan[j].offsetTop+"px";
+                aSpan[j].startTop = aSpan[j].offsetTop;
+            }
+            for(var j=0;j<aSpan.length;j++)
+            {
+                aSpan[j].style.position = "absolute";
+                (function(aSpan,num2){
+                    var iStart = 0;//元素起始位置
+                    var aSpanHeight = aSpan[0].offsetHeight;
+                    aSpan[num2].onmouseover = function(e)
+                    {
+                        iStart = e.clientY; // span 的初始位置
+                    };
+                    aSpan[num2].onmousemove = function(e)
+                    {
+                        var iDis = e.clientY - iStart; //需要移动的距离：鼠标移动和初始值的差
+                        var iNum = iDis>0?1:-1;//小于0时，表示向上移动；大于0时，向下移动
+                        var moveY = this.startTop + iDis; //当前距离 li 顶部的距离：移动的距离 + 距离 li 顶部的距离，当向上移动时为负，向下移动时为正
+                        var moveYDist2 = aLiHeight - aSpanHeight; // 除去 span 的高度，li 的高度 - span 的高度
+                        if(moveY >= 0 && moveY < moveYDist2 ) { //span距离li的距离不能小于0，span距离li
+
+                            // this.style.top = moveY + "px";//初始位置 + 差值
+                            /*
+                            当鼠标移入的是第6个span，且鼠标向上移动了8px
+
+                            0 -> 2
+                            1 -> 3
+                            2 -> 4
+                            3 -> 5
+                            4 -> 6
+                            5 -> 7
+                            6 -> 8 *
+                            7 -> 7
+                            8 -> 6
+                            9 -> 5
+                            10 -> 4
+                            11 -> 3
+                            12 -> 2
+                            13 -> 1
+                            14 -> 0
+                            15 -> 0
+                            ...
+
+                            */
+                            for(var j=0;j<aSpan.length;j++) {
+                                //第j个aSpan的top = 起始位置+移动的距离
+                                /*
+                                 num2 = 6;
+                                 j = 0;
+                                 startTop + 8 - (8-0) px
+                                 j = 1;
+                                 startTop + 8 - (8-1) px
+                                */
+                                if (Math.abs(iDis) > Math.abs(num2 - j)) { //当第j个元素与第num2的位置相差 < iDist时，便移动
+                                    aSpan[j].style.top = aSpan[j].startTop + (Math.abs(iDis) - Math.abs(num2 - j)) * iNum + "px";
+                                }else{ //当第j个元素与第num2的位置相差 > iDist时，便不再移动，让元素保持最初状态
+                                    aSpan[j].style.top = aSpan[j].startTop + "px";
+                                }
+                            }
+                        }
+                    };
+                    //当拖出去 li 时，就让 span 回到原来的位置
+                    aSpan[num2].onmouseout = function(e)
+                    {
+                        // this.style.top = this.startTop + "px";//初始位置 + 差值
+                        for(var j=0;j<aSpan.length;j++){
+                            aSpan[j].style.top = aSpan[j].startTop + "px";
+                        }
+                        animate(aSpan[j],{top:aSpan[j].startTop},500,0.04);
+                    }
+                })(aSpan,j);
+            }
+        }
+        function animate(obj, json, interval, sp, fn) {
+            clearInterval(obj.timer);
+            //var k = 0;
+            //var j = 0;
+            function getStyle(obj, arr) {
+                if(obj.currentStyle){
+                    return obj.currentStyle[arr];  //针对ie
+                } else {
+                    return document.defaultView.getComputedStyle(obj, null)[arr];
+                }
+            }
+            obj.timer = setInterval(function(){
+                //j ++;
+                var flag = true;
+                for(var arr in json) {
+                    var icur = 0;
+                    //k++;
+                    if(arr == "opacity") {
+                        icur = Math.round(parseFloat(getStyle(obj, arr))*100);
+                    } else {
+                        icur = parseInt(getStyle(obj, arr));
+                    }
+                    var speed = (json[arr] - icur) * sp;
+                    speed = speed > 0 ? Math.ceil(speed): Math.floor(speed);
+                    if(icur != json[arr]){
+                        flag = false;
+                    }
+                    if(arr == "opacity"){
+                        obj.style.filter = "alpha(opacity : '+(icur + speed)+' )";
+                        obj.style.opacity = (icur + speed)/100;
+                    }else {
+                        obj.style[arr] = icur + speed + "px";
+                    }
+                    //console.log(j + "," + arr +":"+ flag);
+                }
+
+                if(flag){
+                    clearInterval(obj.timer);
+                    //console.log(j + ":" + flag);
+                    //console.log("k = " + k);
+                    //console.log("j = " + j);
+                    //console.log("DONE");
+                    if(fn){
+                        fn();
+                    }
+                }
+            },interval);
+        }
+
+    }
+</script>
+</body>
+</html>
